@@ -3,9 +3,7 @@ import smtplib
 import os
 from email.message import EmailMessage
 
-
 app = Flask(__name__)
-
 
 # =========================================================
 # EMAIL SETTINGS
@@ -14,83 +12,73 @@ app = Flask(__name__)
 GMAIL_ADDRESS = "iuzunov90@gmail.com"
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 
-RECEIVER_EMAIL = "iuzunov90@gmail.com"
-
+RECEIVER_EMAIL = "sgm_pro@abv.bg"
 
 # =========================================================
 # IMAGE UPLOAD SETTINGS
 # =========================================================
 
-# Maximum allowed size for a single uploaded image - 5 MB
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-
-# Allowed image MIME types
 ALLOWED_IMAGE_TYPES = {
-    "image/jpeg",
-    "image/png",
-    "image/webp"
+"image/jpeg",
+"image/png",
+"image/webp"
 }
-
 
 # =========================================================
 # HOME PAGE
 # =========================================================
 
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
-
+    return render_template("index.html")
 
 # =========================================================
 # TERMS & PRIVACY PAGES
 # =========================================================
 
-@app.route('/terms')
+@app.route("/terms")
 def terms():
-    return render_template('terms.html')
+    return render_template("terms.html")
 
-
-@app.route('/privacy')
+@app.route("/privacy")
 def privacy():
-    return render_template('privacy.html')
-
+    return render_template("privacy.html")
 
 # =========================================================
 # ROBOTS.TXT
 # =========================================================
 
-@app.route('/robots.txt')
+@app.route("/robots.txt")
 def robots():
-    return app.send_static_file('robots.txt')
-
+    return app.send_static_file("robots.txt")
 
 # =========================================================
 # SITEMAP.XML
 # =========================================================
 
-@app.route('/sitemap.xml')
+@app.route("/sitemap.xml")
 def sitemap():
-    return app.send_static_file('sitemap.xml')
-
+    return app.send_static_file("sitemap.xml")
 
 # =========================================================
 # QUOTE FORM SUBMISSION
 # =========================================================
 
-@app.route('/send-quote', methods=['POST'])
+@app.route("/send-quote", methods=["POST"])
 def send_quote():
 
     # -----------------------------------------------------
-    # GET TEXT FORM FIELDS
+    # GET FORM DATA
     # -----------------------------------------------------
 
-    name = request.form.get('name', '').strip()
-    phone = request.form.get('phone', '').strip()
-    email = request.form.get('email', '').strip()
-    service = request.form.get('type', '').strip()
-    budget = request.form.get('budget', '').strip()
-    message = request.form.get('message', '').strip()
+    name = request.form.get("name", "").strip()
+    phone = request.form.get("phone", "").strip()
+    email = request.form.get("email", "").strip()
+    service = request.form.get("type", "").strip()
+    budget = request.form.get("budget", "").strip()
+    message = request.form.get("message", "").strip()
 
 
     # -----------------------------------------------------
@@ -105,23 +93,18 @@ def send_quote():
     # GET UPLOADED IMAGES
     # -----------------------------------------------------
 
-    images = request.files.getlist('images')
-
-
-    # -----------------------------------------------------
-    # VALIDATE UPLOADED IMAGES
-    # -----------------------------------------------------
+    images = request.files.getlist("images")
 
     valid_images = []
 
-    for image in images:
+    # -----------------------------------------------------
+    # VALIDATE IMAGES
+    # -----------------------------------------------------
 
-        # Skip empty file fields
+    for image in images:
         if not image or not image.filename:
             continue
 
-
-        # Check whether the uploaded file type is allowed
         if image.mimetype not in ALLOWED_IMAGE_TYPES:
             return (
                 "Невалиден формат на снимката. "
@@ -129,20 +112,14 @@ def send_quote():
                 400
             )
 
-
-        # Read the uploaded file into memory
         file_data = image.read()
 
-
-        # Check the uploaded file size
         if len(file_data) > MAX_IMAGE_SIZE:
             return (
                 f"Снимката '{image.filename}' е по-голяма от 5 MB.",
                 400
             )
 
-
-        # Store the validated image information
         valid_images.append(
             (
                 image.filename,
@@ -151,9 +128,8 @@ def send_quote():
             )
         )
 
-
     # -----------------------------------------------------
-    # CHECK EMAIL PASSWORD CONFIGURATION
+    # CHECK GMAIL PASSWORD
     # -----------------------------------------------------
 
     if not GMAIL_APP_PASSWORD:
@@ -161,11 +137,11 @@ def send_quote():
         print("EMAIL ERROR: GMAIL_APP_PASSWORD is not configured.")
 
         return """
-        <h2>Възникна проблем при изпращането.</h2>
-        <p>Моля, опитайте отново по-късно.</p>
-        <a href="/">Обратно към сайта</a>
-        """, 500
 
+<h2>Възникна проблем при изпращането.</h2>
+<p>Моля, опитайте отново по-късно.</p>
+<a href="/">Обратно към сайта</a>
+""", 500
 
     # -----------------------------------------------------
     # CREATE EMAIL
@@ -174,19 +150,23 @@ def send_quote():
     mail = EmailMessage()
 
     mail["Subject"] = f"Ново запитване от {name}"
-    mail["From"] = GMAIL_ADDRESS
+
+    mail["From"] = f"sgmpro.bg<{GMAIL_ADDRESS}>"
+
     mail["To"] = RECEIVER_EMAIL
+
     mail["Reply-To"] = email
 
 
     # -----------------------------------------------------
-    # SET EMAIL CONTENT
+    # EMAIL CONTENT
     # -----------------------------------------------------
 
     mail.set_content(
         f"""
-НОВО ЗАПИТВАНЕ ОТ САЙТА
-=======================
+```
+
+# НОВО ЗАПИТВАНЕ ОТ САЙТА
 
 Име и фамилия:
 {name}
@@ -209,16 +189,15 @@ def send_quote():
 Брой прикачени снимки:
 {len(valid_images)}
 """
-    )
-
+)
 
     # -----------------------------------------------------
-    # ATTACH UPLOADED IMAGES
+    # ATTACH IMAGES
     # -----------------------------------------------------
 
     for filename, mimetype, file_data in valid_images:
 
-        maintype, subtype = mimetype.split('/', 1)
+        maintype, subtype = mimetype.split("/", 1)
 
         mail.add_attachment(
             file_data,
@@ -229,53 +208,46 @@ def send_quote():
 
 
     # -----------------------------------------------------
-    # SEND EMAIL THROUGH GMAIL SMTP
+    # SEND EMAIL
     # -----------------------------------------------------
 
     try:
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
 
-            # Establish a secure TLS connection
             smtp.starttls()
 
-
-            # Log in using the Gmail address and App Password
             smtp.login(
                 GMAIL_ADDRESS,
                 GMAIL_APP_PASSWORD
             )
 
-
-            # Send the email
             smtp.send_message(mail)
 
 
-        # Return success message to the user
         return """
+    
         <h2>Запитването беше изпратено успешно!</h2>
         <p>Благодарим Ви. Ще се свържем с Вас възможно най-скоро.</p>
         <a href="/">Обратно към сайта</a>
         """
 
-
     except Exception as error:
 
-        # Print the error to the server console
         print("EMAIL ERROR:", error)
 
-
-        # Return an error message to the user
         return """
+
         <h2>Възникна проблем при изпращането.</h2>
         <p>Моля, опитайте отново по-късно.</p>
         <a href="/">Обратно към сайта</a>
         """, 500
 
-
 # =========================================================
+
 # APPLICATION START
+
 # =========================================================
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=False)

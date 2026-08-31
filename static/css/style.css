@@ -587,6 +587,12 @@ ul {
     transform: none;
   }
 
+  .nav,
+  .backdrop,
+  .nav-toggle span {
+    transition: none;
+  }
+
 }
 
 .text-hivis {
@@ -2889,7 +2895,8 @@ ul {
 .field select:focus,
 .field textarea:focus {
 
-  outline: none;
+  outline: 3px solid transparent;
+  outline-offset: 2px;
 
   border-color: var(--hivis);
 

@@ -72,7 +72,7 @@
 
       toggle.setAttribute(
         'aria-label',
-        open ? 'Close menu' : 'Open menu'
+        open ? 'Затвори менюто' : 'Отвори менюто'
       );
 
 
@@ -143,6 +143,8 @@
         ) {
 
           setOpen(false);
+
+          toggle.focus();
 
         }
 
@@ -936,7 +938,7 @@
           submitButton.disabled = true;
 
           submitButton.innerHTML =
-            'Sending...';
+            'Изпращане...';
 
         }
 
@@ -1009,7 +1011,7 @@
             submitButton.disabled = true;
 
             submitButton.innerHTML =
-              'Sent ✓';
+              'Изпратено ✓';
 
           }
 
@@ -1051,7 +1053,7 @@
 
 
           alert(
-            'There was a problem sending your request. Please try again.'
+            'Възникна проблем при изпращането на запитването. Моля, опитайте отново.'
           );
 
 
